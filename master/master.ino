@@ -42,12 +42,6 @@ String answer = "";
 void setup()
 {
     pinMode(led2, OUTPUT);
-    // Configurar botones como entradas
-    pinMode(J1_ARRIBA, INPUT_PULLUP);
-    pinMode(J1_ABAJO, INPUT_PULLUP);
-    pinMode(J2_ARRIBA, INPUT_PULLUP);
-    pinMode(J2_ABAJO, INPUT_PULLUP);
-
     Serial.begin(115200);
     Serial.println("ESP32 Server");
     WiFi.softAP(ssid, password);
@@ -106,19 +100,36 @@ void dibujarJuego()
 }
 
 // Actualizar la posición de las paletas
+
 void actualizarPaletas()
 {
     // Jugador 1
-    if (!digitalRead(J1_ARRIBA) && posicion_paleta1 > 0)
-        posicion_paleta1 -= 2;
-    if (!digitalRead(J1_ABAJO) && posicion_paleta1 < ALTO_PANTALLA - altura_paleta)
-        posicion_paleta1 += 2;
+    if (answer == "D" && posicion_paleta1 > 0)
+    {
+        posicion_paleta1 -= 4;
+        answer = "z";
+    }
 
+    if (answer == "B" && posicion_paleta1 < ALTO_PANTALLA - altura_paleta)
+    {
+        posicion_paleta1 += 4;
+        answer = "z";
+    }
     // Jugador 2
-    if (!digitalRead(J2_ARRIBA) && posicion_paleta2 > 0)
-        posicion_paleta2 -= 2;
-    if (!digitalRead(J2_ABAJO) && posicion_paleta2 < ALTO_PANTALLA - altura_paleta)
-        posicion_paleta2 += 2;
+    if (answer == "0" && posicion_paleta2 > 0)
+    {
+        posicion_paleta2 -= 4;
+        answer = "z";
+    }
+    if (answer == "5" && posicion_paleta2 < ALTO_PANTALLA - altura_paleta)
+    {
+        posicion_paleta2 += 4;
+        answer = "z";
+    }
+    if (answer == "9")
+        pausarJuego();
+    if (answer != "9")
+        despausaJuego();
 }
 
 // Actualizar la posición de la pelota
@@ -169,9 +180,9 @@ void reiniciarPelota()
 void encenderLed()
 {
     digitalWrite(led2, HIGH);
-    delay(100);
+    delay(10);
     digitalWrite(led2, LOW);
-    delay(100);
+    delay(10);
 }
 void ejecutarJuego()
 {
@@ -192,8 +203,6 @@ void mostrarMensaje(const char *mensaje)
 void despausaJuego()
 {
     isPausado = false;
-    mostrarMensaje("Continua...");
-    delay(5000);
 }
 void pausarJuego()
 {
@@ -213,13 +222,14 @@ void handleDevice1()
 {
     device = "ESP32-01";
     Serial.println(device);
-    
+
     if (server_esp.hasArg("tecla"))
     {
         answer = server_esp.arg("tecla");
         Serial.print("Tecla recibida: ");
         Serial.println(answer);
         server_esp.send(200, "text/plain", "Tecla recibida correctamente.");
+        encenderLed();
     }
     else
     {
@@ -229,6 +239,7 @@ void handleDevice1()
 // Bucle principal
 void loop()
 {
+
     server_esp.handleClient();
     if (!isInicializado)
     {
